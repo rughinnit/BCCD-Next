@@ -1,0 +1,21 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# training artifacts
+runs/
+wandb/
+*.pt
+*.pth
+*.onnx
+*.torchscript
+*.ncnn.*
+*_ncnn_model/
+weights/
+
+# editors / OS
+.idea/
+.vscode/
+.DS_Store
