@@ -82,3 +82,36 @@ python scripts/sweep_nano.py            # 8n, 9t, 10n, 12n
 # evaluation / ensemble
 python scripts/ensemble.py              # COCO-harness single vs WBF
 ```
+
+## Counting accuracy (the clinically meaningful metric)
+
+Protocol: class-aware NMS at IoU 0.70 (matches the evaluation path), confidence tuned on the
+**val** split (87 images), reported on the **test** split (72 images, GT: RBC 805, WBC 71,
+Platelets 69). Detections from the ncnn deployment models; square 640 letterbox.
+
+| Model | val-tuned conf | RBC MAE | WBC MAE | Platelets MAE | All-class MAE |
+|---|---|---|---|---|---|
+| yolov9t | 0.60 | 3.49 (31 %) | 0.08 (8 %) | 0.33 (35 %) | 3.90 |
+| yolo11n | 0.50 | 3.22 (29 %) | 0.08 (8 %) | 0.33 (35 %) | 3.64 |
+| **yolo26n** | **0.50** | **3.00** (27 %) | **0.07** (7 %) | **0.28** (29 %) | **3.36** |
+
+Detailed breakdown for yolo26n @ conf 0.50:
+
+| Class | MAE | Median | Within ±1 cell | Exact | Bias |
+|---|---|---|---|---|---|
+| RBC | 3.00 | 2 | 34.7 % | 12.5 % | +0.19 |
+| WBC | 0.07 | 0 | **100 %** | 93.1 % | +0.07 |
+| Platelets | 0.28 | 0 | 98.6 % | 73.6 % | +0.03 |
+| All classes | — | — | — | 8.3 % of images | — |
+
+Aggregate counts over the whole test split (v26n): **RBC 820 vs 805 (+1.9 %)**,
+**WBC 76 vs 71 (+7.0 %)**, **Platelets 71 vs 69 (+2.9 %)**. Per-image error is ±3 RBC, but
+the bias is small, so errors cancel over many fields.
+
+**Counting flips the model ranking**: yolo26n, which lost on mAP50-95 (0.619 vs 0.640),
+is the best counter (3.36 vs 3.64). Its higher mAP50 (0.929) was the right signal.
+
+Letterbox matters: with rectangular (val-style) inference the same model scores 4.04 all-class
+MAE on 24 test images versus 3.75 with square padding — square is better for counting here, and
+torch-square and ncnn-square agree exactly (3.75 both), confirming the deployment path matches
+the reference once NMS and letterbox are aligned.
