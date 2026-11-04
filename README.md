@@ -64,7 +64,30 @@ same split is used, which is why the shipped one is kept here.
 Detection Based on Improved YOLOv7 and CNN-Swin Transformer* (ICIP 2024). It is YOLOv7-based,
 expects PyTorch ≤ 1.7.1 + CUDA, and is vendored unmodified as reference only.
 
-## Quick start (pending tooling)
+
+## Results
+
+Trained and evaluated on the RX 570 (ROCm 5.4.3 + PyTorch 1.13.1), then exported to ncnn/MIGraphX.
+Full tables, per-class breakdown, ensemble and methodology caveats: **[results/RESULTS.md](results/RESULTS.md)**.
+
+Headline numbers (BCCD test split, 72 images / 945 boxes):
+
+| Model | mAP50 (TTA) | mAP50-95 (TTA) | Deploy FPS |
+|---|---|---|---|
+| yolov9t | 0.9137 | 0.6395 | — |
+| **yolo11n** (winner) | **0.9191** | **0.6398** | 66 (ncnn) / 127 (MIGraphX) |
+| yolo12n | 0.9232 | 0.6368 | — |
+| yolo26n | **0.9287** | 0.6186 | — |
+
+- Best counting (find every cell): `yolo26n`. Best localisation: `yolo11n`.
+- Ensemble `v9t + v11n + v12n` (WBF): 0.6295 mAP50-95, +0.7 over the best single model.
+- Platelets are localisation-limited: AP50 ≈ 0.90, AP50-95 ≈ 0.48.
+- **CBC was excluded** — 183/420 of its images duplicate BCCD val/test.
+
+Environment recipe: **[docs/SETUP.md](docs/SETUP.md)**. Demo: `media/bccd_final_demo.mp4`,
+model weights: `models/bccd_v11n_best.pt` (+ ncnn export).
+
+## Quick start
 
 Planned, not yet in this repo:
 

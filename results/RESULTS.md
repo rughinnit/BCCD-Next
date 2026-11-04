@@ -1,0 +1,84 @@
+# Blood-cell detection results — BCCD, trained on the RX 570
+
+Hardware: AMD RX 570 (gfx803) via ROCm 5.4.3 + PyTorch 1.13.1, 4 GB VRAM.
+Dataset: BCCD (364 images) + BCD Kaggle (866 usable, 8 near-duplicates removed).
+Training: 1,071 images, 640 px, batch 4–8, fp32, 100 epochs, seed 0.
+Test: BCCD official test split — 72 images, 945 boxes (RBC 805, WBC 71, Platelets 69).
+
+## Family comparison (test split)
+
+| Model | mAP50 | mAP50 TTA | mAP50-95 | mAP50-95 TTA | Train time | img/s |
+|---|---|---|---|---|---|---|
+| yolov8n | 0.9027 | 0.9089 | 0.6201 | 0.6266 | 44 min | 40.4 |
+| **yolov9t** | 0.9136 | 0.9137 | **0.6407** | 0.6395 | 61 min | 29.4 |
+| yolov10n | 0.9176 | 0.9176 | 0.6356 | 0.6356 | 58 min | 30.9 |
+| **yolo11n** | 0.9069 | 0.9191 | 0.6301 | **0.6398** | 51 min | 35.0 |
+| yolo11s | 0.9165 | 0.9203 | 0.6263 | 0.6341 | 3.5 h (resumed) | — |
+| yolo12n | 0.9221 | 0.9232 | 0.6355 | 0.6368 | 87 min | 20.6 |
+| **yolo26n** | 0.9162 | **0.9287** | 0.6073 | 0.6186 | 56 min | 32.0 |
+
+Best mAP50: **yolo26n 0.9287** (finds the most cells).
+Best mAP50-95: **yolov9t 0.6407 plain / yolo11n 0.6398 TTA** (tightest boxes).
+
+## Per-class, TTA (`AP50 / AP50-95`)
+
+| Model | RBC | WBC | Platelets |
+|---|---|---|---|
+| yolov9t | 0.872 / 0.630 | 0.971 / 0.798 | 0.898 / **0.490** |
+| yolo11n | 0.872 / 0.633 | **0.990 / 0.813** | 0.895 / 0.474 |
+| yolo12n | **0.881 / 0.637** | 0.974 / 0.788 | **0.914 / 0.485** |
+| yolo26n | 0.883 / 0.629 | 0.993 / 0.759 | 0.910 / 0.468 |
+
+Platelets: detection is fine (AP50 ≈ 0.90), localisation is not (AP50-95 ≈ 0.48) —
+a 15 px object loses most of its IoU to a 2 px box error.
+
+## Ensemble (weighted box fusion, identical COCO harness)
+
+| Configuration | mAP50-95 |
+|---|---|
+| yolo12n alone | 0.6228 |
+| v9t + v11n | 0.6251 |
+| **v9t + v11n + v12n** | **0.6295** |
+| v9t + v11n + v12n + v26n | 0.6280 |
+
+Ensemble gains **+0.7 mAP50-95** over the best single model, at 3× inference cost.
+
+## Deployment card — yolo11n (winner, single model)
+
+| Runtime | Raw forward | Notes |
+|---|---|---|
+| PyTorch + ROCm 5.4.3 | 13.26 ms | needs the 3 GB ROCm stack |
+| ncnn + Vulkan (RADV) | 12.33 ms | ~100 MB runtime, no ROCm |
+| **MIGraphX 2.4** | **7.85 ms** | graph fusion; ~127 img/s |
+| ncnn full pipeline (letterbox+decode+NMS) | 15.08 ms | 66 FPS |
+
+Accuracy of this model: **0.9191 mAP50 / 0.6398 mAP50-95** (TTA).
+
+## Methodology notes (read before quoting these numbers)
+
+1. **CBC was excluded.** 183 of its 420 images are the same photographs as BCCD val/test
+   (71/72 test, 84/87 val). Training on it would have leaked the test set.
+2. **BCD near-duplicates removed** with dHash ≤ 4 (8 of 874 matched a BCCD val/test image).
+3. **BCCD annotations are incomplete** — unlabelled cells count as false positives, which
+   depresses precision for every model. Papers reporting 99 % on BCCD are not comparable.
+4. **Extra data did not help**: yolov8n 0.616 → 0.620 mAP50-95 going 364 → 1,071 images;
+   yolo11n 0.627 → 0.630. The BCD domain (416×416 crops) differs from BCCD (640×480 smears).
+5. **Capacity saturated**: yolo11s (9.4 M params, 3.5 h) scored below yolo11n (2.6 M, 51 min).
+6. **TTA is not universally beneficial**: +1.2 mAP50 for 11n, +1.3 for 26n, ~0 for 9t/10n/12n.
+7. **ROCm instability**: a GPU page fault occurred during multi-model batch inference;
+   the same job on CPU was fine.
+
+## Reproduction
+
+```bash
+# dataset (VOC -> YOLO, merged with BCD, filtered)
+python scripts/build_yolo.py            # BCCD
+python scripts/make_merged.py           # create datasets/merged + configs/merged.yaml
+
+# training (ROCm environment, see docs/SETUP.md)
+python scripts/train_merged.py          # 11n, 26n, 11s
+python scripts/sweep_nano.py            # 8n, 9t, 10n, 12n
+
+# evaluation / ensemble
+python scripts/ensemble.py              # COCO-harness single vs WBF
+```

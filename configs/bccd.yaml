@@ -1,0 +1,8 @@
+# BCCD blood-cell detection dataset (YOLO format)
+path: /home/archryzen/bccd/datasets/bccd_yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 3
+names: ['RBC', 'WBC', 'Platelets']

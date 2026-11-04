@@ -19,3 +19,10 @@ weights/
 .idea/
 .vscode/
 .DS_Store
+
+# derived datasets (regenerate with scripts/build_yolo.py + scripts/make_merged.py)
+datasets/bccd_yolo/
+datasets/merged/
+
+# large run artifacts
+runs/

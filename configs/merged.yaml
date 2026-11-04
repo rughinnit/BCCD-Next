@@ -1,0 +1,9 @@
+path: /home/archryzen/bccd/datasets/merged
+train: images/train
+val: images/val
+test: images/test
+nc: 3
+names:
+- RBC
+- WBC
+- Platelets
