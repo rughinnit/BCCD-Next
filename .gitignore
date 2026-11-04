@@ -26,3 +26,4 @@ datasets/merged/
 
 # large run artifacts
 runs/
+datasets/merged_seg/

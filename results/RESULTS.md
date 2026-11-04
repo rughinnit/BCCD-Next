@@ -159,3 +159,26 @@ Conclusion: post-processing, resolution and fusion are exhausted. The residual R
 (2.79 cells/field) is structural to box-based counting of touching cells — two cells either
 merge into one box or split into two, and no NMS/fusion setting can tell which is correct.
 The remaining honest fixes are label quality (BCCD misses cells) or instance segmentation.
+
+### Segmentation experiment (the last structural fix) — failed
+
+BCCD ships boxes only, so a seg dataset was synthesised by turning every box into a 4-point
+rectangle polygon (14,475 train / 1,137 val / 945 test). `yolo26n-seg` trained 100 epochs
+(2.05 h). Counting was evaluated with both box-NMS and **mask-IoU NMS** (which should keep two
+touching cells apart when their masks are disjoint), thresholds tuned on val.
+
+| Method | RBC MAE | WBC MAE | Platelets MAE | All-class MAE |
+|---|---|---|---|---|
+| detection @960 (best) | **2.79** | 0.10 | **0.28** | **3.17** |
+| yolo26n-seg | 3.97 | 0.06 | 0.57 | 4.60 |
+
+Mask-IoU NMS was **not selected on val** — it never beat plain box NMS. Reasons:
+
+1. Synthetic rectangle masks carry no boundary information, so mask IoU between two touching
+   cells is nearly the same as box IoU — there is nothing for mask-NMS to exploit.
+2. The mask head costs capacity: platelets (10–20 px) collapsed from 0.28 to 0.57 MAE and the
+   model predicted 30 of 69 platelets.
+3. Segmentation is only worth it with **real polygon annotations**, which BCCD does not have.
+
+**Conclusion: box detection at 960 px remains the best counting configuration on this dataset
+(3.17 all-class MAE). The residual RBC error is a label/boundary problem, not an architecture one.**
