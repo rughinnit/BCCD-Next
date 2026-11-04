@@ -141,3 +141,21 @@ Final counting accuracy (yolo26n @ 960, val-tuned):
 
 Cost: 960 inference is 39.5 ms/frame (25 FPS) on the RX 570 versus 15 ms at 640 — irrelevant for
 still images, and the gain is a 7 % reduction in RBC counting error.
+
+### Exhaustive fix attempts (all val-tuned, test-reported)
+
+| Attempt | All-class MAE | Notes |
+|---|---|---|
+| baseline 640 | 3.36 | reference |
+| NMS IoU sweep | 3.36 | duplicates don't overlap enough |
+| **960 export** | **3.17** | **best** (RBC 3.00 → 2.79) |
+| 1280 export | 3.74 | over-splits |
+| flip TTA + WBF | 3.33 | merges neighbours |
+| multi-scale 640+960 | 3.31 | no gain |
+| 2×2 tiling (640 / 960) | not selected on val | tiles upscale but LOSE small boxes in fusion |
+| per-class config selection | 3.24 | val overfits (WBC chose conf 0.05) |
+
+Conclusion: post-processing, resolution and fusion are exhausted. The residual RBC error
+(2.79 cells/field) is structural to box-based counting of touching cells — two cells either
+merge into one box or split into two, and no NMS/fusion setting can tell which is correct.
+The remaining honest fixes are label quality (BCCD misses cells) or instance segmentation.
