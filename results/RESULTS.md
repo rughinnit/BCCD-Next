@@ -115,3 +115,29 @@ Letterbox matters: with rectangular (val-style) inference the same model scores 
 MAE on 24 test images versus 3.75 with square padding — square is better for counting here, and
 torch-square and ncnn-square agree exactly (3.75 both), confirming the deployment path matches
 the reference once NMS and letterbox are aligned.
+
+### Fixing the counting errors
+
+Four remedies were tried for the RBC duplicate / platelet-precision problem, all tuned on val
+and reported on test (yolo26n):
+
+| Attempt | All-class MAE | RBC MAE | Verdict |
+|---|---|---|---|
+| baseline 640, NMS iou 0.7 | 3.36 | 3.00 | reference |
+| NMS IoU sweep (0.50–0.80) | 3.36 | 3.00 | no effect — duplicates don't overlap enough |
+| **export at 960, iou 0.50, conf 0.50** | **3.17** | **2.79** | **best** |
+| export at 1280 | 3.74 | 3.28 | worse (over-splitting) |
+| flip TTA + WBF | 3.33 | 2.92 | undercounts (fusion merges neighbours) |
+| multi-scale 640+960 WBF | 3.31 | 2.92 | no better than 960 alone |
+
+Final counting accuracy (yolo26n @ 960, val-tuned):
+
+| Class | MAE | Within ±1 | Bias | Total pred/gt |
+|---|---|---|---|---|
+| RBC | 2.79 | 45.8 % | +0.04 | 808 / 805 (+0.4 %) |
+| WBC | 0.10 | 98.6 % | +0.10 | 78 / 71 (+9.9 %) |
+| Platelets | 0.28 | 98.6 % | −0.03 | 67 / 69 (−2.9 %) |
+| All | 3.17 | — | — | — |
+
+Cost: 960 inference is 39.5 ms/frame (25 FPS) on the RX 570 versus 15 ms at 640 — irrelevant for
+still images, and the gain is a 7 % reduction in RBC counting error.
