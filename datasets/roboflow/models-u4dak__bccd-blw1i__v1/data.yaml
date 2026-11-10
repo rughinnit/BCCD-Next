@@ -1,0 +1,15 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 7
+names: ['Basophil', 'Eosinophil', 'Lymphocyte', 'Monocyte', 'Neutrophil', 'Platelets', 'RBC']
+
+roboflow:
+  workspace: models-u4dak
+  project: bccd-blw1i
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/models-u4dak/bccd-blw1i/dataset/1
+
+# split: stratified 0.70/0.15/0.15 of the original single train split
