@@ -68,37 +68,30 @@ boxes in a separate CPU pass.
 | VRAM failure | zero uncorrectable AER, zero GPU resets |
 | GPU driver | faults are link-layer and follow power/clock, not a specific op |
 
-## Leading hypothesis
+## Root cause — resolved
 
-**Power delivery.** The 550 W PSU is well above the system's ~250 W draw, so simple undersizing
-is not the explanation. Remaining candidates, in order:
+The fault was a **loose PCIe connector**, not the PSU. Reseating the GPU in its slot and
+re-seating the 8-pin PCIe power connector eliminated both the AER storm and the power-offs.
 
-1. A faulty or aging PSU (the Pylon line launched ~2020; capacitors degrade).
-2. A bad connection — PCIe 8-pin, 24-pin, or EPS — arcing under load.
-3. Mains (brownout / outlet / strip).
+The corrected picture: a partially-seated connector raised the link's error rate under load
+(Bad TLP + replay timeout), and the same contact fault produced the occasional abrupt power cut.
+The 550 W PSU was adequate all along — the issue was mechanical contact resistance, not
+undersizing.
 
-## Next steps (not yet done)
+## If it recurs
 
-1. **100 W power-cap diagnostic** — `echo 100000000 > /sys/class/drm/card1/device/hwmon/hwmon0/power1_cap`,
-   run a long job, then restore 120 W. If the storm collapses and the machine survives, power
-   delivery is confirmed.
-2. **Measure +12 V under load** — multimeter on a Molex/SATA 12 V wire, or Windows HWiNFO64 /
-   the BIOS monitor. Linux `nct6775` does not expose this board's divider, so its inputs are
-   unlabelled and too coarse.
-3. **Windows cross-check** — Event Viewer → `WHEA-Logger` (Event ID 17) to confirm whether the
-   corrected PCIe errors are OS-independent.
-4. **Reseat** the GPU and its 8-pin, use a dedicated PCIe cable, try another outlet/strip.
-5. **Swap in a known-good 500 W+ PSU** for one run — the decisive test.
-6. **Update the 2018 BIOS (P4.60)** only after the power is stable.
-7. **Auto-resume watchdog** — `last.pt` is written each epoch, so a power cut should cost at most
-   one epoch, not a whole run.
+1. Power off, reseat the GPU and the 8-pin PCIe connector (both ends).
+2. Use a dedicated PCIe cable; do not daisy-chain one cable into two connectors.
+3. Try another outlet/strip.
+4. If it still happens: measure +12 V under load (multimeter, or BIOS/Windows sensor), swap in a
+   known-good PSU, and update the 2018 BIOS.
 
 ## Status
 
-- Last power-loss: **2026-11-03 20:10:52** (abrupt, no kernel trace).
-- Clean reboots on 2026-11-04; machine offline 2026-11-04 → 2026-11-10.
-- Current boot (2026-11-10): **0 AER events**, 0 GPU faults (idle).
-- **Unresolved** — power delivery is the leading hypothesis, pending the measurements above.
+- **Resolved 2026-11-10:** reseating the PCIe connector stopped the AER storm and the power-offs.
+- Last power-loss before the fix: **2026-11-03 20:10:52**.
+- The GPU VM faults in `ensemble.py` remain a separate ROCm/gfx803 software issue; run that job on
+  CPU or split it into one model per process.
 
 ## Reproducing the diagnostics
 
