@@ -32,6 +32,10 @@ evaluation, ncnn export) is the next step.
 | **BCD** | see `datasets/bcd` | Platelets, RBC, WBC | YOLO txt + `data.yaml` | [Kaggle: adhoppin/blood-cell-detection-datatset](https://www.kaggle.com/datasets/adhoppin/blood-cell-detection-datatset) | MIT (Kaggle terms apply) |
 | **CBC** | see `third_party/CBC` | RBC, WBC, Platelets | VOC XML (Annotations/) | [MahmudulAlam/Complete-Blood-Cell-Count-Dataset](https://github.com/MahmudulAlam/Complete-Blood-Cell-Count-Dataset) | MIT |
 
+Roboflow Universe copies (YOLO format, plus a 7-class WBC-subtype export) live in
+`datasets/roboflow/`; provenance, split caveats and verification numbers are in
+[`datasets/roboflow/README.md`](datasets/roboflow/README.md).
+
 ### BCCD class distribution (measured from the annotations)
 
 | Class | Objects | Share |

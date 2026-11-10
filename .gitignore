@@ -27,3 +27,9 @@ datasets/merged/
 # large run artifacts
 runs/
 datasets/merged_seg/
+
+# Roboflow export archives (re-fetch with scripts/fetch_roboflow_datasets.py)
+datasets/roboflow/_zips/
+
+# 8,599-image corpus: polygon labels, cross-split leakage, ~231 MB. Local only.
+datasets/roboflow/quan-c2r6k__bccd-ccnkh__v1/
