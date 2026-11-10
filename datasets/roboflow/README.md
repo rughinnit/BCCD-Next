@@ -80,6 +80,22 @@ plain re-uploads. Dozens of the 300 results are 364-image duplicates of each oth
   is >= 10 (no near-duplicates), nor does it overlap the CBC set. Timestamp-based names,
   subtype labels are genuinely new annotation work.
 
+Source: <https://universe.roboflow.com/models-u4dak/bccd-blw1i> (version 1)
+
+```bibtex
+@misc{ bccd-blw1i_dataset,
+  title = { BCCD Dataset },
+  type = { Open Source Dataset },
+  author = { models },
+  howpublished = { \url{https://universe.roboflow.com/models-u4dak/bccd-blw1i} },
+  url = { https://universe.roboflow.com/models-u4dak/bccd-blw1i },
+  journal = { Roboflow Universe },
+  publisher = { Roboflow },
+  year = { 2023 },
+  month = { oct },
+}
+```
+
 ## 3. quan-c2r6k__bccd-ccnkh__v1
 
 - 8,599 images, all 640x640; nc=7 (`BAS, EOS, LYM, MON, NEU, PLT, RBC`)
@@ -112,6 +128,22 @@ Caveats, in order of importance:
 Conclusion: usable as a separate 7-class instance-segmentation corpus after polygon-to-box
 conversion and de-leaking; not usable as a BCCD detection baseline. It is git-ignored
 because it is 231 MB of 269 MB and re-downloadable with the fetch script.
+
+Source: <https://universe.roboflow.com/quan-c2r6k/bccd-ccnkh> (version 1)
+
+```bibtex
+@misc{ bccd-ccnkh_dataset,
+  title = { BCCD Dataset },
+  type = { Open Source Dataset },
+  author = { Quan },
+  howpublished = { \url{https://universe.roboflow.com/quan-c2r6k/bccd-ccnkh} },
+  url = { https://universe.roboflow.com/quan-c2r6k/bccd-ccnkh },
+  journal = { Roboflow Universe },
+  publisher = { Roboflow },
+  year = { 2025 },
+  month = { oct },
+}
+```
 
 ## Re-downloading
 
