@@ -5,6 +5,21 @@ Dataset: BCCD (364 images) + BCD Kaggle (866 usable, 8 near-duplicates removed).
 Training: 1,071 images, 640 px, batch 4–8, fp32, 100 epochs, seed 0.
 Test: BCCD official test split — 72 images, 945 boxes (RBC 805, WBC 71, Platelets 69).
 
+## Executive summary
+
+- **Best counting configuration:** `yolo26n`, 960 px export, class-aware NMS, IoU 0.50,
+  confidence 0.50 (tuned on val). Test all-class MAE **3.17 cells/image** — RBC 2.79,
+  WBC 0.10, platelets 0.28.
+- **Aggregate counts over 72 fields:** RBC 808/805 (+0.4 %), WBC 78/71 (+9.9 %),
+  platelets 67/69 (−2.9 %).
+- **Best detection:** `yolo26n` mAP50 **0.9287** (TTA); `yolov9t` mAP50-95 **0.6407**.
+- **Ensemble (WBF `v9t+v11n+v12n`):** 0.6295 mAP50-95 — below the best single model, so it was
+  not adopted.
+- **Nine counting remedies failed** (NMS sweep, 1280 export, TTA/WBF, multi-scale, tiling,
+  per-class configs, segmentation). The residual RBC error is structural to box counting of
+  touching cells; better labels or real masks are the only remaining fixes.
+- **Deployment:** `yolo11n` — 7.85 ms (MIGraphX), 12.33 ms (ncnn), 13.26 ms (PyTorch).
+
 ## Family comparison (test split)
 
 | Model | mAP50 | mAP50 TTA | mAP50-95 | mAP50-95 TTA | Train time | img/s |
