@@ -1,0 +1,14 @@
+path: /home/archryzen/bccd/datasets/roboflow/models-u4dak__bccd-blw1i__v1
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 7
+names:
+  - Basophil
+  - Eosinophil
+  - Lymphocyte
+  - Monocyte
+  - Neutrophil
+  - Platelets
+  - RBC
