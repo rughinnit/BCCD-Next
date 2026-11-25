@@ -115,6 +115,13 @@ Best config: **`yolo26n` @ 960 px export, IoU 0.50, conf 0.50**.
 Counting flips the detection ranking: `yolo26n` loses on mAP50-95 but wins on counting because
 mAP50 (finding every cell) matters more than tight boxes.
 
+### 7-class Roboflow (separate domain)
+
+`yolo26n` fine-tuned on `models-u4dak` (1,090 images; Basophil, Eosinophil, Lymphocyte, Monocyte,
+Neutrophil, Platelets, RBC): **mAP50 0.9619 / mAP50-95 0.8368** (TTA, 165-image test split,
+0.79 h). Not comparable with the 3-class numbers above. Details:
+[results/RESULTS.md](results/RESULTS.md).
+
 ### Deployment (RX 570)
 
 | Runtime | Speed | Notes |

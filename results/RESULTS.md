@@ -197,3 +197,42 @@ Mask-IoU NMS was **not selected on val** — it never beat plain box NMS. Reason
 
 **Conclusion: box detection at 960 px remains the best counting configuration on this dataset
 (3.17 all-class MAE). The residual RBC error is a label/boundary problem, not an architecture one.**
+
+## 7-class Roboflow BCCD (`models-u4dak`) — separate domain
+
+Dataset: `datasets/roboflow/models-u4dak__bccd-blw1i__v1`
+Classes: Basophil, Eosinophil, Lymphocyte, Monocyte, Neutrophil, Platelets, RBC
+Splits: 762 train / 163 val / 165 test (stratified 70/15/15, seed 0)
+Model: `yolo26n`, 640 px, batch 8, 100 epochs, fp32, 0.79 h
+Test: 165 images, 1,290 instances
+
+| Metric | Plain | TTA |
+|---|---|---|
+| mAP50 | 0.9583 | **0.9619** |
+| mAP50-95 | 0.8046 | **0.8368** |
+| Precision | 0.8958 | 0.9046 |
+| Recall | 0.9368 | 0.9429 |
+
+Per-class TTA:
+
+| Class | AP50 | AP50-95 |
+|---|---|---|
+| Basophil | 0.9758 | 0.9023 |
+| Eosinophil | 0.9796 | 0.8891 |
+| Lymphocyte | 0.9683 | 0.8726 |
+| Monocyte | 0.9201 | **0.7364** |
+| Neutrophil | 0.9423 | 0.8790 |
+| Platelets | **0.9778** | **0.7176** |
+| RBC | 0.9696 | 0.8605 |
+
+Caveats:
+
+- **Separate domain.** Do not compare these with the 3-class BCCD numbers above. The images are
+  640x640, produced by vertically stretching 640x480 sources, and the labels include five WBC
+  subtypes that the 3-class data does not have.
+- The archive shipped only `train/`; `valid/` and `test/` are a local stratified re-split
+  (`scripts/split_yolo_dataset.py`, seed 0). No stems are shared between splits.
+- Monocyte (0.736) and Platelets (0.718) have the weakest AP50-95. Both are small or
+  morphologically ambiguous; the 2.8 % platelet share does not hurt AP50 (0.978) but does hurt
+  localisation.
+- First run on this dataset; no hyperparameter sweep was done.
