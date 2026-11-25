@@ -236,3 +236,38 @@ Caveats:
   morphologically ambiguous; the 2.8 % platelet share does not hurt AP50 (0.978) but does hurt
   localisation.
 - First run on this dataset; no hyperparameter sweep was done.
+
+## Common-space benchmark (plain inference, both domains)
+
+To compare the 3-class BCCD models with the 7-class Roboflow model, all three were run on
+**both test sets in one shared 3-class space** (RBC, WBC, Platelets), with identical settings:
+640 px, conf 0.001, IoU 0.7, max_det 300, no TTA, COCOeval. The 7-class model's five WBC
+subtypes are collapsed to WBC, and duplicate subtype boxes are merged with per-class NMS.
+Inference ran on CPU because loading three models in one process triggers the known gfx803
+multi-model GPU fault in ROCm 5.4.3.
+
+| Model | Test set | mAP50 | mAP50-95 | RBC | WBC | Platelets |
+|---|---|---|---|---|---|---|
+| yolo11n (3-class) | BCCD official | 0.8842 | **0.6184** | 0.5926 | 0.8067 | 0.4559 |
+| yolo26n (3-class) | BCCD official | 0.8828 | 0.5968 | 0.5763 | 0.7621 | 0.4521 |
+| yolo26n (7-class) | BCCD official | 0.8181 | 0.5577 | 0.4798 | 0.7343 | 0.4592 |
+| yolo11n (3-class) | u4dak | 0.1875 | 0.1369 | 0.1440 | 0.2643 | 0.0023 |
+| yolo26n (3-class) | u4dak | 0.0589 | 0.0380 | 0.0044 | 0.1093 | 0.0003 |
+| yolo26n (7-class) | u4dak | **0.9747** | **0.8255** | 0.8662 | 0.8941 | 0.7163 |
+
+Reading it:
+
+- **Each model wins its own domain.** On BCCD, the 3-class models score 0.597-0.618
+  mAP50-95; on u4dak, the 7-class model scores 0.826 in the collapsed 3-class space.
+- **Domain transfer is asymmetric.** The 7-class model on BCCD reaches 0.558; the 3-class
+  models on u4dak collapse to 0.137 and 0.038. u4dak is a much harder transfer target for a
+  model trained on BCCD/BCD, and platelets nearly vanish (AP50-95 0.002).
+- **The earlier gap was task and domain, not model quality.** Comparing the 7-class 0.8368
+  (native 7-class mAP, TTA) with the 3-class 0.6186 (3-class mAP, TTA) was misleading. On a
+  common protocol and common class space, the 7-class model is not universally better; it is
+  better on its own corpus.
+- This benchmark uses plain inference, so its numbers are lower than the TTA numbers in the
+  tables above (for example yolo26n 3-class 0.5968 here vs 0.6186 TTA). It is internally
+  consistent; do not mix the two protocols.
+
+Raw: `results/benchmark_common.json`.
