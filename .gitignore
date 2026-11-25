@@ -28,6 +28,9 @@ datasets/merged/
 runs/
 datasets/merged_seg/
 
+# ultralytics label caches
+*.cache
+
 # Roboflow export archives (re-fetch with scripts/fetch_roboflow_datasets.py)
 datasets/roboflow/_zips/
 
